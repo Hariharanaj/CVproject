@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Ultralytics / YOLO run outputs and downloaded weights
+runs/
+models/*
+!models/.gitkeep
+*.pt
+*.onnx
+
+# Datasets and downloaded archives (large files – download separately)
+data/raw/
+data/SKUs_on_Shelves_PL/
+data/SKU-110K/
+*.zip
+*.tar.gz
+
+# Inference outputs
+outputs/*.jpg
+outputs/*.png
+outputs/*.mp4
+outputs/*.json
+outputs/*.csv
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log

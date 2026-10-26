@@ -1,0 +1,35 @@
+# ============================================================
+# Real-Time Retail Shelf Product Detection
+# Requirements for Apple Silicon (M4) macOS
+# PyTorch with MPS/Metal acceleration
+# ============================================================
+
+# Core ML / Vision
+torch>=2.1.0          # MPS support requires 2.1+; already installed at 2.8.0
+torchvision>=0.16.0
+ultralytics>=8.3.0    # YOLO11 / YOLO12 series
+
+# Computer Vision
+opencv-python>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# Data Handling
+pandas>=2.0.0
+huggingface_hub>=0.27.0
+
+# Dashboard
+streamlit>=1.35.0
+
+# Testing
+pytest>=8.0.0
+pytest-cov>=4.1.0
+
+# Utilities
+PyYAML>=6.0
+tqdm>=4.66.0
+matplotlib>=3.7.0
+
+# Optional: ONNX export
+# onnx>=1.15.0
+# onnxruntime>=1.17.0
