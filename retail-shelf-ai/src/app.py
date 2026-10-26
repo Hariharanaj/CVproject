@@ -28,9 +28,11 @@ import json
 import os
 import sys
 import time
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import streamlit as st
 from PIL import Image
 
@@ -83,7 +85,7 @@ conf_threshold = st.sidebar.slider(
     "Confidence threshold",
     min_value = 0.10,
     max_value = 0.90,
-    value     = 0.25,
+    value     = 0.40,
     step      = 0.05,
     help      = "Only detections above this confidence are shown.",
 )
@@ -145,10 +147,10 @@ if uploaded is not None:
     pil_img = Image.open(uploaded).convert("RGB")
     with col1:
         st.subheader("📷 Original Image")
-        st.image(pil_img, use_container_width=True)
+        st.image(pil_img, width="stretch")
 
     # Analyse button
-    run_btn = st.button("🔍 Analyse Shelf", type="primary", use_container_width=True)
+    run_btn = st.button("🔍 Analyse Shelf", type="primary", width="stretch")
 
     if run_btn:
         with st.spinner("Running inference … (first run may download model weights)"):
@@ -183,6 +185,8 @@ if uploaded is not None:
             results = model.predict(
                 source  = img_bgr,
                 conf    = conf_threshold,
+                imgsz   = 960,
+                max_det = 1000,
                 device  = device,
                 verbose = False,
                 save    = False,
@@ -206,6 +210,9 @@ if uploaded is not None:
                         "class_id": cls,
                         "class_name": _class_name(names, cls),
                     })
+
+            # Per-class SKU counts power the dashboard table and CSV export.
+            sku_counts = Counter(det["class_name"] for det in raw_dets)
 
             # ---- Shelf analysis -------------------------------------------
             analysis = analyse_shelf(
@@ -252,7 +259,7 @@ if uploaded is not None:
 
             with col2:
                 st.subheader("🔍 Annotated Image")
-                st.image(annotated_rgb, use_container_width=True)
+                st.image(annotated_rgb, width="stretch")
 
         # ---- Metrics -------------------------------------------------------
         st.markdown("---")
@@ -262,6 +269,26 @@ if uploaded is not None:
         m3.metric("⚠️ Est. Gaps",         analysis.total_estimated_gaps)
         m4.metric("📈 Shelf Rows",        len(analysis.rows))
         m5.metric("⚡ Inference",         f"{elapsed_ms:.0f} ms")
+
+        # ---- Per-SKU counts and CSV download -----------------------------
+        counts_df = pd.DataFrame(
+            [
+                {"SKU": sku, "Detected": count}
+                for sku, count in sku_counts.most_common()
+            ],
+            columns=["SKU", "Detected"],
+        )
+        st.subheader("📦 Counts by SKU")
+        if counts_df.empty:
+            st.info("No products were detected at this confidence threshold.")
+        else:
+            st.dataframe(counts_df, hide_index=True, width="stretch")
+            st.download_button(
+                label="⬇️ Download SKU Counts CSV",
+                data=counts_df.to_csv(index=False).encode("utf-8"),
+                file_name=f"sku_counts_{Path(uploaded.name).stem}.csv",
+                mime="text/csv",
+            )
 
         # ---- Status banner ------------------------------------------------
         if status == "OK":
@@ -310,6 +337,7 @@ if uploaded is not None:
                 "device"           : device,
                 "conf_threshold"   : conf_threshold,
                 "row_count"        : len(analysis.rows),
+                "sku_counts"       : dict(sku_counts),
                 "planogram"        : planogram_result,
             },
         )
